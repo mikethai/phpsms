@@ -1,7 +1,7 @@
 <?php
 
-use Toplan\PhpSms\Agent;
-use Toplan\PhpSms\Sms;
+use mikecai\PhpSms\Agent;
+use mikecai\PhpSms\Sms;
 
 class SerializeTest extends PHPUnit_Framework_TestCase
 {

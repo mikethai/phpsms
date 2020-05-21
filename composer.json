@@ -1,12 +1,12 @@
 {
-  "name": "toplan/phpsms",
+  "name": "mikecai/PhpSms",
   "description": "Probably the most intelligent, elegant sms send library in php",
   "license": "MIT",
   "keywords": ["sms", "php", "phpsms", "sms library"],
   "authors": [
     {
-      "name": "toplan",
-      "email": "toplan710@gmail.com"
+      "name": "mikecai",
+      "email": "mike49112@gmail.com"
     }
   ],
   "require": {
@@ -19,12 +19,12 @@
   },
   "autoload": {
     "psr-4": {
-      "Toplan\\PhpSms\\": [
+      "mikecai\\PhpSms\\": [
         "src/phpsms/",
         "src/phpsms/agents/",
         "src/phpsms/interfaces/"
       ],
-      "Toplan\\PhpSms\\Facades\\": [
+      "mikecai\\PhpSms\\Facades\\": [
         "src/phpsms/facades/"
       ]
     },

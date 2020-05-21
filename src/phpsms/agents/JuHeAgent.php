@@ -1,6 +1,6 @@
 <?php
 
-namespace Toplan\PhpSms;
+namespace mikecai\PhpSms;
 
 /**
  * Class JuHeAgent

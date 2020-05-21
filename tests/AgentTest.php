@@ -1,8 +1,8 @@
 <?php
 
-use Toplan\PhpSms\Agent;
-use Toplan\PhpSms\LogAgent;
-use Toplan\PhpSms\ParasiticAgent;
+use mikecai\PhpSms\Agent;
+use mikecai\PhpSms\LogAgent;
+use mikecai\PhpSms\ParasiticAgent;
 
 class AgentTest extends PHPUnit_Framework_TestCase
 {
