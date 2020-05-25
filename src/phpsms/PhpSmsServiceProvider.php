@@ -39,7 +39,7 @@ class PhpSmsServiceProvider extends ServiceProvider
         }
         $this->mergeConfigFrom(__DIR__ . '/../config/phpsms.php', 'phpsms');
 
-        $this->app->singleton('Toplan\\PhpSms\\Sms', function () {
+        $this->app->singleton('mikecai\\PhpSms\\Sms', function () {
             Sms::scheme(config('phpsms.scheme', []));
             Sms::config(config('phpsms.agents', []));
 
@@ -54,6 +54,6 @@ class PhpSmsServiceProvider extends ServiceProvider
      */
     public function provides()
     {
-        return ['Toplan\\PhpSms\\Sms'];
+        return ['mikecai\\PhpSms\\Sms'];
     }
 }
