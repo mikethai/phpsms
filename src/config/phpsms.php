@@ -33,6 +33,24 @@ return [
      *
      */
     'agents' => [
+
+        /*
+         * -----------------------------------
+         * Every8D
+         * -----------------------------------
+         * website:http://global.every8d.com.tw/#price
+         * support content sms.
+         */
+
+        'Every8d' => [
+            // 手機門號
+            'mdm_number' => 'your_mdm',
+            //帳號
+            'username'  => 'your_username',
+            //密碼
+            'password'  => 'your_password',
+        ],
+
         /*
          * -----------------------------------
          * YunPian
