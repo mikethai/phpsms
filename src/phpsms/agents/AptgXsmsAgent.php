@@ -38,7 +38,6 @@ class AptgXsmsAgent extends Agent implements ContentSms
         '50331655'  => '簡訊本文含有非法關鍵字',
         '50331656'  => '簡訊長度過長',
         '50331657'  => '長簡訊則數已超過上限',
-
         '50331664'  => '簡訊主旨不存在(或空白)',
         '50331665'  => 'API 簡訊發送啟始時間(StartDateTime)需晚於 API 呼叫時間',
         '50331666'  => 'API 簡訊發送結束時間(StopDateTime)需晚於發送起始時間以及起始時間+24 小時之內',
@@ -55,14 +54,23 @@ class AptgXsmsAgent extends Agent implements ContentSms
     public function sendContentSms($to, $content)
     {
         $url = 'https://xsms.aptg.com.tw/XSMSAP/api/APIRTFastHttpRequest';
-        $params = [
+        // $url .= "?MDN=$this->mdn_number";
+        // $url .= "&UID=$this->username";
+        // $url .= "&UPASS=$this->password";
+
+        $content = "<Request><Subject>$this->mdn_number</Subject><Retry>Y</Retry><Message>$content</Message><MDNList><MSISDN>$to</MSISDN></MDNList></Request>";
+
+        $params = $this->params([
+            'MDN' => $this->mdn_number,
             'UID' => $this->username,
             'UPASS' => $this->password,
-            'Cotent' => $content,
-            'MDN' => $to
-        ];
-        $params = array();
-        $result = $this->curlPOST($url, $params);
+            'Content' => $content
+        ]);
+
+        $result = $this->curlPost($url, [], [
+            CURLOPT_POSTFIELDS => http_build_query($params),
+
+        ]);
         $this->setResult($result);
     }
 
@@ -81,11 +89,10 @@ class AptgXsmsAgent extends Agent implements ContentSms
 
 
         if ($result_ary["TaskID"]) {
-            // $result = $result['response'];
             $this->result(Agent::INFO, ([
-                                         'BATCH_ID' => $result_ary["TaskID"]
-                                                ]));
-            $this->result(Agent::SUCCESS, isset($result_ary[4]));
+                'BATCH_ID' => $result_ary["TaskID"]
+            ]));
+            $this->result(Agent::SUCCESS, isset($result_ary["TaskID"]));
             $this->result(Agent::CODE, 0);
         } else {
             $this->result(Agent::INFO, 'request failed - '.$result_ary["Reason"]);
