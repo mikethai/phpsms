@@ -33,18 +33,16 @@ class Every8dAgent extends Agent implements ContentSms
     {
 
         $result_ary = explode(",", $result["response"]);
-        if ($result_ary) {
-            $result = $result['response'];
-            $this->result(Agent::INFO, (['CREDIT' => $result_ary[0], 
-                                                    'SENDED' => $result_ary[1], 
-                                                    'COST' => $result_ary[2], 
-                                                    'UNSEND' => $result_ary[3], 
-                                                    'BATCH_ID' => $result_ary[4]
+        if (isset($result_ary[2])) {
+            // $result = $result['response'];
+            $this->result(Agent::INFO, ([
+                                         'BATCH_ID' => $result_ary[4]
                                                 ]));
             $this->result(Agent::SUCCESS, isset($result_ary[4]));
             $this->result(Agent::CODE, 0);
         } else {
-            $this->result(Agent::INFO, 'request failed');
+            $this->result(Agent::INFO, 'request failed - '.$result_ary[1]);
+            $this->result(Agent::CODE, $result_ary[0]);
         }
     }
 
