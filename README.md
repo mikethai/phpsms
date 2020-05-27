@@ -1,7 +1,6 @@
 # PhpSms
 [![StyleCI](https://styleci.io/repos/44543599/shield)](https://styleci.io/repos/44543599)
 [![Build Status](https://travis-ci.org/mikecai/phpsms.svg?branch=master)](https://travis-ci.org/mikecai/phpsms)
-[![Code Coverage](https://scrutinizer-ci.com/g/mikecai/phpsms/badges/coverage.png?b=master)](https://scrutinizer-ci.com/g/mikecai/phpsms/?branch=master)
 [![Latest Stable Version](https://img.shields.io/packagist/v/mikecai/phpsms.svg)](https://packagist.org/packages/mikecai/phpsms)
 [![Total Downloads](https://img.shields.io/packagist/dt/mikecai/phpsms.svg)](https://packagist.org/packages/mikecai/phpsms)
 
@@ -9,13 +8,9 @@
 
 > phpsms的任務均衡調度功能由[toplan/task-balancer](https://github.com/toplan/task-balancer)提供。
 
-特別感謝以下贊助者：
-
-[![簡訊宝](http://toplan.github.io/img/smsbao-logo.png)](http://www.smsbao.com/)
 
 # 特色
 - 支持內容簡訊
-- 模版簡訊，語音驗證碼，內容語音，模版語音，語音文件。
 - 支持發送均衡調度，可按代理器權重值均衡選擇服務商發送。
 - 支持一個或多個備用代理器（服務商）。
 - 支持代理器計劃方案熱更新，可隨時更新/刪除/新加代理器。
@@ -26,10 +21,13 @@
 
 # 服务商
 
-| 服务商 | 模板簡訊 | 内容簡訊 | 语音驗證碼 | 最低消费  |  最低消费单价 | 资费标准
+| 服務商 | 模板簡訊 | 内容簡訊 | 語音驗證碼 | 最低消费  |  最低消费單價 |
 | ----- | :-----: | :-----: | :------: | :-------: | :-----: | :-----:
-| [Luosimao](http://luosimao.com)        | × | √ | √ | ￥850(1万条) | ￥0.085/条 
-| [Every8D](http://global.every8d.com.tw/) | × |  √ |  × | NT 8000(1萬條) | NT0.8/條 
+| [Every8D](http://global.every8d.com.tw/) | × |  √ |  × | NT 8000(1萬條) |  NT0.8/條 
+| [亞太企業簡訊(舊)](http://xsms.aptg.com.tw/XSMSAP/userlogin.zul) | × |  √ |  × |(不提供) | (不提供)
+| [亞太企業簡訊(新-暫不提供)](https://emanager.aptg.com.tw/konakart/CustomProdIntro.action?page=SmsCost) | × |  √ |  × | NT 8000(1萬條) | NT0.8/條 
+
+
 # 安装
 
 ```php
@@ -52,16 +50,10 @@ composer require mikecai/phpsms:dev-master
 ```php
 //example:
 Sms::config([
-    'Luosimao' => [
-        'apikey' => 'your api key',
-        'voiceApikey' => 'your voice api key',
-    ],
-    'YunPian'  => [
-        'apikey' => 'your api key',
-    ],
-    'SmsBao' => [
-        'username' => 'your username',
-        'password'  => 'your password'
+    'Every8d' => [
+        'mdm_number' => 'your_mdm_number',
+        'username'  => 'your_username',
+        'password'  => 'your_password',
     ]
 ]);
 ```
@@ -74,12 +66,12 @@ Sms::config([
 //example:
 Sms::scheme([
     //被使用概率为2/3
-    'Luosimao' => '20',
+    'Every8d' => '20',
 
-    //被使用概率为1/3，且为备用代理器
+    //被使用概率為1/3，且为備用代理器
     'YunPian' => '10 backup',
 
-    //仅为备用代理器
+    //僅為備用代理器
     'SmsBao' => '0 backup',
 ]);
 ```
@@ -94,43 +86,15 @@ Sms::scheme([
 require('path/to/vendor/autoload.php');
 use Toplan\PhpSms\Sms;
 
-// 接收人手机号
+// 接收人手機號
 $to = '1828****349';
-// 簡訊模版
-$templates = [
-    'YunTongXun' => 'your_temp_id',
-    'SubMail'    => 'your_temp_id'
-];
-// 模版数据
-$tempData = [
-    'code' => '87392',
-    'minutes' => '5'
-];
+
 // 簡訊内容
 $content = '【签名】这是簡訊内容...';
 
-// 只希望使用模板方式發送簡訊，可以不设置content(如:云通讯、Submail、Ucpaas)
-Sms::make()->to($to)->template($templates)->data($tempData)->send();
-
-// 只希望使用内容方式發送，可以不设置模板id和模板data(如:簡訊宝、云片、luosimao)
+// 使用内容方式發送(如:Every8d)
 Sms::make()->to($to)->content($content)->send();
 
-// 同时确保能通过模板和内容方式發送，这样做的好处是可以兼顾到各种类型服务商
-Sms::make()->to($to)
-    ->template($templates)
-    ->data($tempData)
-    ->content($content)
-    ->send();
-
-// 语音驗證碼
-Sms::voice('02343')->to($to)->send();
-
-// 语音驗證碼兼容模版语音(如阿里大鱼的文本转语音)
-Sms::voice('02343')
-    ->template('Alidayu', 'your_tts_code')
-    ->data(['code' => '02343'])
-    ->to($to)
-    ->send();
 ```
 
 ### 3. 在laravel和lumen中使用
@@ -315,7 +279,7 @@ Sms::queue(false, function($sms, $data){
 });
 ```
 
-如果已经定义过如何推送到队列，还可以继续设置关闭/开启队列：
+如果已經定義過如何推送到隊列，還可以繼續設置關閉/開啟隊列：
 ```php
 Sms::queue(true);//开启队列
 Sms::queue(false);//关闭队列
@@ -595,9 +559,6 @@ Sms::scheme([
 
 # Todo
 
-- [ ] 重新實現云通訊代理器，去掉`lib/CCPRestSmsSDK.php`
-- [ ] 重新實現雲之訊代理器，去掉`lib/Ucpaas.php`
-- [ ] 升級雲片接口到v2版本
 
 # License
 
