@@ -14,6 +14,7 @@ class Sms
 {
     const TYPE_SMS = 1;
     const TYPE_VOICE = 2;
+    const TYPE_STATUS = 3;
 
     /**
      * Task instance.
@@ -220,16 +221,22 @@ class Sms
         }
         // register
         self::getTask()->driver("$name $scheme")->work(function (Driver $driver) use ($settings) {
+            // xdebug_print_function_stack( 'Your own message' );
             $agent = self::getAgent($driver->name, $settings);
             extract($driver->getTaskData());
             $template = isset($templates[$driver->name]) ? $templates[$driver->name] : null;
             $file = isset($files[$driver->name]) ? $files[$driver->name] : null;
             $params = isset($params[$driver->name]) ? $params[$driver->name] : [];
+
             if ($type === self::TYPE_VOICE) {
                 $agent->sendVoice($to, $content, $template, $data, $code, $file, $params);
             } elseif ($type === self::TYPE_SMS) {
                 $agent->sendSms($to, $content, $template, $data, $params);
+            } elseif ($type === self::TYPE_STATUS){
+                $agent->requestBatchSatus($queryId);
             }
+
+
             $result = $agent->result();
             if ($result['success']) {
                 $driver->success();
@@ -490,6 +497,26 @@ class Sms
     }
 
     /**
+     * Create a instance for send status.
+     *
+     * @param string $batchId
+     *
+     * @return Sms
+     */
+    public static function status($batchId = null)
+    {
+        $sms = new self();
+        $sms->type(self::TYPE_STATUS);
+
+        // exit(var_dump($sms));
+        return $sms;
+        // $agent_name = $this->firstAgent;
+        // $agent = self::getAgent($agent_name);
+
+        // return $agent->requestBatchSatus($batchId);
+    }
+
+    /**
      * Set whether to use the queue system,
      * and define how to use it.
      *
@@ -526,7 +553,7 @@ class Sms
      */
     public function type($type)
     {
-        if ($type !== self::TYPE_SMS && $type !== self::TYPE_VOICE) {
+        if ($type !== self::TYPE_SMS && $type !== self::TYPE_VOICE && $type !== self::TYPE_STATUS) {
             throw new PhpSmsException('Expected the parameter equals to `Sms::TYPE_SMS` or `Sms::TYPE_VOICE`.');
         }
         $this->smsData['type'] = $type;
@@ -542,11 +569,30 @@ class Sms
      * @return $this
      */
     public function to($mobile)
-    {
+    {   
+
         if (is_string($mobile)) {
             $mobile = trim($mobile);
         }
         $this->smsData['to'] = $mobile;
+
+        return $this;
+    }
+
+    /**
+     * Set the batch ID for Status query .
+     *
+     * @param string $batchId
+     *
+     * @return $this
+     */
+    public function query($batchId)
+    {   
+
+        if (is_string($batchId)) {
+            $batchId = trim($batchId);
+        }
+        $this->smsData['queryId'] = $batchId;
 
         return $this;
     }

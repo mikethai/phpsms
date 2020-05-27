@@ -7,6 +7,7 @@ abstract class Agent
     const SUCCESS = 'success';
     const INFO = 'info';
     const CODE = 'code';
+    const STATUS = 'Status';
 
     /**
      * The configuration information.
@@ -49,6 +50,7 @@ abstract class Agent
             self::SUCCESS => false,
             self::INFO    => null,
             self::CODE    => 0,
+            self::STATUS    => '',
         ];
     }
 
