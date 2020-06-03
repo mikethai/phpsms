@@ -10,13 +10,13 @@
 
 
 # 特色
-- 支持內容簡訊
+- 支持一般簡訊
+- 支持簡訊發送狀態查詢
 - 支持發送均衡調度，可按代理器權重值均衡選擇服務商發送。
 - 支持一個或多個備用代理器（服務商）。
 - 支持代理器計劃方案熱更新，可隨時更新/刪除/新加代理器。
 - 允許推入變量，並自定義本質上實現邏輯（與所屬系統鬆散替換）。
 - 靈活的發送前後鉤子。
-- 內置國內主流服務商的代理器。
 - [自定義代理器]（＃自定義代理器）和[寄生代理器]（＃寄生代理器）。
 
 # 服务商
@@ -54,6 +54,11 @@ Sms::config([
         'mdm_number' => 'your_mdm_number',
         'username'  => 'your_username',
         'password'  => 'your_password',
+    ],
+    'AptgXsms' =>[
+        'mdn_number' => 'your_mdm_number', // 手機門號
+        'username'  => 'your_username',   //帳號
+        'password'  => 'your_password',  //密碼
     ]
 ]);
 ```
@@ -69,31 +74,39 @@ Sms::scheme([
     'Every8d' => '20',
 
     //被使用概率為1/3，且为備用代理器
-    'YunPian' => '10 backup',
+    'AptgXsms' => '10 backup',
 
     //僅為備用代理器
     'SmsBao' => '0 backup',
 ]);
 ```
 > **調度方案解析：**
-> 如果按照以上配置，那麼系統首次會嘗試使用`Luosimao`或`YunPian`發送簡訊，且它們被使用的概率分別為`2/3`和`1/3`。
-> 如果使用其中一個代理器發送失敗，那麼會啟用備用代理器，按照配置可知備用代理器有`YunPian`和`SmsBao`，那麼會依次調用直到發送成功或無備用代理器可用。
-> 值得注意的是，如果首次嘗試的是`YunPian`，那麼備用代理器將會只使用`SmsBao`，也就是會排除使用過的代理器。
+> 如果按照以上配置，那麼系統首次會嘗試使用`Every8d`或`AptgXsms`發送簡訊，且它們被使用的概率分別為`2/3`和`1/3`。
+> 如果使用其中一個代理器發送失敗，那麼會啟用備用代理器，按照配置可知備用代理器有`SmsBao`和`SmsBao`，那麼會依次調用直到發送成功或無備用代理器可用。
+> 值得注意的是，如果首次嘗試的是`AptgXsms`，那麼備用代理器將會只使用`SmsBao`，也就是會排除使用過的代理器。
 
 ### 2. Enjoy it!
 
 ```php
 require('path/to/vendor/autoload.php');
-use Toplan\PhpSms\Sms;
+use mikecai\PhpSms\Sms;
 
 // 接收人手機號
-$to = '1828****349';
+$to = '0987654321';
 
 // 簡訊内容
-$content = '【签名】这是簡訊内容...';
+$content = '【簽名】这是簡訊内容...';
 
 // 使用内容方式發送(如:Every8d)
-Sms::make()->to($to)->content($content)->send();
+$result =  Sms::make()->to($to)->content($content)->send();
+
+//$result ，內容會返回 batchId
+
+
+$batchId = "a7801510-c427-4665-bd8e-ce10be816a1b"; 
+
+//查詢簡訊發送狀態
+$sms_status = Sms::status()->query($batchId)->send();
 
 ```
 
@@ -105,13 +118,13 @@ Sms::make()->to($to)->content($content)->send();
 //服务提供器
 'providers' => [
     ...
-    Toplan\PhpSms\PhpSmsServiceProvider::class,
+    mikecai\PhpSms\PhpSmsServiceProvider::class,
 ]
 
 //别名
 'aliases' => [
     ...
-    'PhpSms' => Toplan\PhpSms\Facades\Sms::class,
+    'PhpSms' => mikecai\PhpSms\Facades\Sms::class,
 ]
 ```
 
@@ -144,12 +157,12 @@ PhpSms::make()->to($to)->content($content)->send();
 手動設置代理器調度方案(優先級高於配置文件)，如：
 ```php
 Sms::scheme([
-    'SmsBao' => '80 backup'
-    'YunPian' => '100 backup'
+    'Every8d' => '80 backup'
+    'AptgXsms' => '100 backup'
 ]);
 //或
-Sms::scheme('SmsBao', '80 backup');
-Sms::scheme('YunPian', '100 backup');
+Sms::scheme('Every8d', '80 backup');
+Sms::scheme('AptgXsms', '100 backup');
 ```
 - 获取
 
@@ -170,65 +183,65 @@ $scheme['SmsBao'] = Sms::scheme('SmsBao');
 
 > 参数配置支持热更新，即在应用系统的整个运行過程中都能随时修改。
 
-- 设置
+- 設定
 
 手动设置代理器的配置数据(优先级高于配置文件)，如：
 ```php
 Sms::config([
-   'SmsBao' => [
+   'Every8d' => [
        'username' => ...,
        'password' => ...,
    ]
 ]);
 //或
-Sms::config('SmsBao', [
+Sms::config('Every8d', [
    'username' => ...,
    'password' => ...,
 ]);
 ```
-- 获取
+- 獲取
 
-通过该方法还能获取所有或指定代理器的配置参数，如：
+通過該方法還能獲取所有或指定代理器的配置參數，如：
 ```php
-//获取所有的配置:
+//獲取所有的配置：
 $config = Sms::config();
 
-//获取指定代理器的配置:
-$config['SmsBao'] = Sms::config('SmsBao');
+//獲取指定代理器的配置：
+$config['Every8d'] = Sms::config('Every8d');
 ```
 
 ### Sms::beforeSend($handler[, $override]);
 
-發送前钩子，示例：
+發送前鉤子，示例：
 ```php
 Sms::beforeSend(function($task, $index, $handlers, $prevReturn){
-    //获取簡訊数据
+    //獲取簡訊數據
     $smsData = $task->data;
     ...
-    //如果返回false会终止發送任务
+    //如果返回false會終止發送任務
     return true;
 });
 ```
-> 更多细节请查看 [task-balancer](https://github.com/toplan/task-balancer#2-task-lifecycle) 的 `beforeRun` 钩子
+> 更多細節請查看 [task-balancer](https://github.com/toplan/task-balancer#2-task-lifecycle) 的 `beforeRun` 鉤子
 
 ### Sms::beforeAgentSend($handler[, $override]);
 
-代理器發送前钩子，示例：
+代理器發送前鉤子，示例：
 ```php
 Sms::beforeAgentSend(function($task, $driver, $index, $handlers, $prevReturn){
-    //簡訊数据:
+    //簡訊資料:
     $smsData = $task->data;
-    //当前使用的代理器名称:
+    //當前使用的代理器名稱：
     $agentName = $driver->name;
-    //如果返回false会停止使用当前代理器
+    //如果返回false會停止使用當前代理器
     return true;
 });
 ```
-> 更多细节请查看 [task-balancer](https://github.com/toplan/task-balancer#2-task-lifecycle) 的 `beforeDriverRun` 钩子
+> 更多細節請查看 [task-balancer](https://github.com/toplan/task-balancer#2-task-lifecycle) 的 `beforeDriverRun` 鉤子
 
 ### Sms::afterAgentSend($handler[, $override]);
 
-代理器發送后钩子，示例：
+代理器發送后鉤子，示例：
 ```php
 Sms::afterAgentSend(function($task, $agentResult, $index, $handlers, $prevReturn){
      //$result为代理器的發送结果数据
@@ -236,23 +249,24 @@ Sms::afterAgentSend(function($task, $agentResult, $index, $handlers, $prevReturn
      ...
 });
 ```
-> 更多细节请查看 [task-balancer](https://github.com/toplan/task-balancer#2-task-lifecycle) 的 `afterDriverRun` 钩子
+> 更多細節請查看 [task-balancer](https://github.com/toplan/task-balancer#2-task-lifecycle) 的 `afterDriverRun`鉤子
 
 ### Sms::afterSend($handler[, $override]);
 
-發送后钩子，示例：
+發送後鉤子，示例：
 ```php
 Sms::afterSend(function($task, $taskResult, $index, $handlers, $prevReturn){
-    //$result为發送后获得的结果数组
+    //$result為發送後獲得的結果數組
     $success = $taskResult['success'];
     ...
 });
 ```
-> 更多细节请查看 [task-balancer](https://github.com/toplan/task-balancer#2-task-lifecycle) 的 `afterRun` 钩子
+> 更多細節請查看 [task-balancer](https://github.com/toplan/task-balancer#2-task-lifecycle) 的 `afterRun` 鉤子
 
 ### Sms::queue([$enable[, $handler]])
 
-该方法可以设置是否启用队列以及定义如何推送到队列。
+該方法可以設置是否啟用鹼性以及定義如何推進到位數。
+
 
 `$handler`匿名函数可使用的参数:
 + `$sms` : Sms实例
@@ -313,7 +327,19 @@ $sms = Sms::make([
 ]);
 ```
 
-### Sms::voice()
+### Sms::status()->query($batchId)->send();
+
+查詢簡訊發送狀態
+```php
+//從發送簡訊返回的ID
+$batchId = "a7801510-c427-4665-bd8e-ce10be816a1b"; 
+
+//查詢簡訊發送狀態
+$sms_status = Sms::status()->query($batchId)->send();
+
+```
+
+### ~~Sms::voice()~~
 
 生成發送语音驗證碼的sms实例，并返回实例。
 ```php
@@ -323,38 +349,21 @@ $sms = Sms::voice();
 $sms = Sms::voice($code);
 ```
 
+下方為大陸服務，參考就好
 > - 如果你使用`Luosimao`语音驗證碼，还需用在配置文件中`Luosimao`选项中设置`voiceApikey`。
 > - **语音文件ID**即是在服务商配置的语音文件的唯一编号，比如阿里大鱼[语音通知](http://open.taobao.com/doc2/apiDetail.htm?spm=a219a.7395905.0.0.oORhh9&apiId=25445)的`voice_code`。
 > - **模版语音**是另一种语音请求方式，它是通过模版ID和模版数据进行的语音请求，比如阿里大鱼的[文本转语音通知](http://open.taobao.com/doc2/apiDetail.htm?spm=a219a.7395905.0.0.f04PJ3&apiId=25444)。
 
 ### type($type)
 
-设置实例类型，可选值有`Sms::TYPE_SMS`和`Sms::TYPE_VOICE`，返回实例对象。
+设置实例类型，可选值有`Sms::TYPE_SMS`和~~Sms::TYPE_VOICE~~(台灣簡訊沒支援)，返回实例对象。
 
 ### to($mobile)
 
-设置發送给谁，并返回实例。
+设置發送给谁，并返回實例。
 ```php
-$sms->to('1828*******');
+$sms->to('0987654321');
 
-//兼容腾讯云
-$sms->to([86, '1828*******'])
-```
-
-### template($agentName, $id)
-
-指定代理器设置模版或批量设置，并返回实例。
-```php
-//设置指定服务商的模板id
-$sms->template('YunTongXun', 'your_temp_id')
-    ->template('SubMail', 'your_temp_id');
-
-//一次性设置多个服务商的模板id
-$sms->template([
-    'YunTongXun' => 'your_temp_id',
-    'SubMail' => 'your_temp_id',
-    ...
-]);
 ```
 
 ### data($key, $value)
@@ -371,7 +380,8 @@ $sms->data([
 ]);
 ```
 
-> 通过`template`和`data`方法的组合除了可以实现模版簡訊的数据填充，还可以实现模版语音的数据填充。
+> 通過`data`方法的組合除了可以實現模版簡訊的數據填充，還可以實現模版語音的數據填充。
+
 
 ### content($text)
 
@@ -383,23 +393,6 @@ $sms->data([
 $sms->content('【签名】这是簡訊内容...');
 ```
 
-### code($code)
-
-设置语音驗證碼，并返回实例对象。
-
-### file($agentName, $id)
-
-设置语音文件，并返回实例对象。
-```php
-$sms->file('Agent1', 'agent1_file_id')
-    ->file('Agent2', 'agent2_file_id');
-
-//或
-$sms->file([
-    'Agent1' => 'agent1_file_id',
-    'Agent2' => 'agent2_fiile_id',
-]);
-```
 
 ### params($agentName, $params)
 
@@ -429,11 +422,8 @@ $sms->params([
 [
     'type'      => ...,
     'to'        => ...,
-    'templates' => [...],
     'data'      => [...], // template data
     'content'   => ...,
-    'code'      => ...,   // voice code
-    'files'     => [...], // voice files
     'params'    => [...],
 ]
 ```
@@ -442,7 +432,7 @@ $sms->params([
 
 临时设置發送时使用的代理器(不会影响备用代理器的正常使用)，并返回实例，`$name`为代理器名称。
 ```php
-$sms->agent('SmsBao');
+$sms->agent('Every8d');
 ```
 > 通过该方法设置的代理器将获得绝对优先权，但只对当前簡訊实例有效。
 
